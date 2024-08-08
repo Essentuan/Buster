@@ -1,0 +1,5 @@
+package com.busted_moments.buster;
+
+class Constants {
+    static final String VERSION = "{{ version }}";
+}
