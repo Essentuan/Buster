@@ -1,11 +1,13 @@
 package com.busted_moments.buster
 
 import com.busted_moments.buster.api.Profile
+import com.busted_moments.buster.compression.Compression
 import io.ktor.util.AttributeKey
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketExtension
 import io.ktor.websocket.WebSocketExtensionFactory
 import io.ktor.websocket.WebSocketExtensionHeader
+import kotlinx.coroutines.runBlocking
 import net.essentuan.esl.json.Json
 import net.essentuan.esl.reflections.Reflections
 import net.essentuan.esl.string.extensions.isUUID
@@ -89,10 +91,8 @@ class Buster : WebSocketExtension<Buster> {
         if (frame !is Frame.Text)
             return frame
 
-        return INFLATER.inflateFully(frame.data).let {
-            INFLATER.reset()
-
-            Frame.Text(frame.fin, it, frame.rsv1, frame.rsv2, frame.rsv3)
+        return runBlocking {
+            Frame.Text(frame.fin, Compression.inflate(frame.data), frame.rsv1, frame.rsv2, frame.rsv3)
         }
     }
 
@@ -100,10 +100,8 @@ class Buster : WebSocketExtension<Buster> {
         if (frame !is Frame.Text)
             return frame
 
-        return DEFLATER.deflateFully(frame.data).let {
-            DEFLATER.reset()
-
-            Frame.Text(frame.fin, it, frame.rsv1, frame.rsv2, frame.rsv3)
+        return runBlocking {
+            Frame.Text(frame.fin, Compression.deflate(frame.data), frame.rsv1, frame.rsv2, frame.rsv3)
         }
     }
 

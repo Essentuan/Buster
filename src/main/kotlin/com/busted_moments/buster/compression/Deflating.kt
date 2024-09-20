@@ -1,4 +1,4 @@
-package com.busted_moments.buster
+package com.busted_moments.buster.compression
 
 import io.ktor.util.cio.KtorDefaultPool
 import io.ktor.utils.io.core.BytePacketBuilder
