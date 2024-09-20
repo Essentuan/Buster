@@ -11,10 +11,15 @@ import net.essentuan.esl.reflections.Reflections
 import net.essentuan.esl.string.extensions.isUUID
 import net.essentuan.esl.string.extensions.toUUID
 import java.util.UUID
+import java.util.zip.Deflater
+import java.util.zip.Inflater
 
 private const val USERNAME = "username"
 private const val UUID = "uuid"
 private const val VERSION = "version"
+
+private val INFLATER = Inflater(true)
+private val DEFLATER = Deflater(Deflater.BEST_COMPRESSION, true)
 
 class Buster : WebSocketExtension<Buster> {
     lateinit var username: String
@@ -32,13 +37,13 @@ class Buster : WebSocketExtension<Buster> {
             val parameters = mutableListOf(NAME)
 
             if (::username.isInitialized)
-                parameters+= "$USERNAME=$username"
+                parameters += "$USERNAME=$username"
 
             if (::uuid.isInitialized)
-                parameters+= "$UUID=$uuid"
+                parameters += "$UUID=$uuid"
 
             if (::version.isInitialized)
-                parameters+= "$VERSION=$version"
+                parameters += "$VERSION=$version"
 
             return listOf(
                 WebSocketExtensionHeader(
@@ -60,7 +65,7 @@ class Buster : WebSocketExtension<Buster> {
             if (it == null || !Profile.isValid(it))
                 return emptyList()
 
-            username= it
+            username = it
         }
 
         protocol[UUID].also {
@@ -80,8 +85,27 @@ class Buster : WebSocketExtension<Buster> {
         return requestedProtocols
     }
 
-    override fun processIncomingFrame(frame: Frame): Frame = frame
-    override fun processOutgoingFrame(frame: Frame): Frame = frame
+    override fun processIncomingFrame(frame: Frame): Frame {
+        if (frame !is Frame.Text)
+            return frame
+
+        return INFLATER.inflateFully(frame.data).let {
+            INFLATER.reset()
+
+            Frame.Text(frame.fin, it, frame.rsv1, frame.rsv2, frame.rsv3)
+        }
+    }
+
+    override fun processOutgoingFrame(frame: Frame): Frame {
+        if (frame !is Frame.Text)
+            return frame
+
+        return DEFLATER.deflateFully(frame.data).let {
+            DEFLATER.reset()
+
+            Frame.Text(frame.fin, it, frame.rsv1, frame.rsv2, frame.rsv3)
+        }
+    }
 
     companion object : WebSocketExtensionFactory<Buster, Buster> {
         const val NAME = "buster"
