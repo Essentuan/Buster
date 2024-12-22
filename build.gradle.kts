@@ -69,6 +69,9 @@ tasks {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            group = "com.github.essentuan"
+            version = "v${project.version}"
+
             artifactId = "buster"
 
             from(components["java"])
