@@ -5,7 +5,7 @@ import com.busted_moments.buster.api.Party
 import com.busted_moments.buster.protocol.Packet
 import java.util.Date
 
-class ServerboundContentCompletion(
+class ServerboundContentCompletionPacket(
     val id: String,
     val name: String,
     val party: Party,
