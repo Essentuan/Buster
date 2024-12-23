@@ -1,10 +1,11 @@
 package com.busted_moments.buster.api
 
-import net.essentuan.esl.encoding.JsonBasedEncoder
+import net.essentuan.esl.encoding.AbstractEncoder
 import net.essentuan.esl.iteration.Iterators
 import net.essentuan.esl.json.Json
 import net.essentuan.esl.json.json
 import net.essentuan.esl.json.type.AnyJson
+import net.essentuan.esl.other.unsupported
 import net.essentuan.esl.string.extensions.toUUID
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Type
@@ -14,11 +15,6 @@ import java.util.UUID
  * A Wynncraft party. If a party member has not been found, their UUID will be zeroed.
  */
 interface Party : Collection<Party.Member> {
-    /**
-     * The leader of the party. Null if there is no party.
-     */
-    val leader: Member?
-
     operator fun get(name: String): Member?
 
     operator fun get(uuid: UUID): Member?
@@ -36,14 +32,14 @@ interface Party : Collection<Party.Member> {
         element.uuid in this || element.name in this
 
     fun copy(): Party =
-        this as? Impl ?: Impl(leader, this)
+        this as? Impl ?: Impl(this)
 
     interface Member : PlayerType {
         val hasUUID: Boolean
             get() = uuid.leastSignificantBits != 0L || uuid.mostSignificantBits != 0L
     }
 
-    private data class Impl(override val leader: Member?, val members: Collection<Member>) : Party {
+    private data class Impl(val members: Collection<Member>) : Party {
         private val names = mutableMapOf<String, Member>()
         private val uuids = mutableMapOf<UUID, Member>()
 
@@ -82,7 +78,7 @@ interface Party : Collection<Party.Member> {
 
     private data class MemberImpl(override val name: String, override val uuid: UUID) : Member
 
-    companion object : JsonBasedEncoder<Party>() {
+    companion object : AbstractEncoder<Party, List<Json>>() {
         private fun Member.json(): Json = json {
             "name" to name
             "uuid" to uuid.toString()
@@ -101,43 +97,36 @@ interface Party : Collection<Party.Member> {
             type: Class<*>,
             element: AnnotatedElement,
             vararg typeArgs: Type
-        ): AnyJson? =
-            json {
-                "leader" to (obj.leader?.json() ?: return@json)
-
-                "members" to obj.asSequence()
-                    .filterNot { it == obj.leader }
-                    .map { it.json() }
-                    .toList()
-            }
+        ): List<Json> =
+            obj.map { it.json() }
 
         override fun decode(
-            obj: AnyJson,
+            obj: List<Json>,
             flags: Set<Any>,
             type: Class<*>,
             element: AnnotatedElement,
             vararg typeArgs: Type
-        ): Party? {
-            val leader = (obj["leader"] as? AnyJson)?.toMember() ?: return null
+        ): Party? =
+           Impl(obj.mapNotNull { it.toMember() })
 
-            return Impl(
-                leader,
-                (sequenceOf(leader).plus(
-                    (obj.getList("members", AnyJson::class) ?: emptyList())
-                        .asSequence()
-                        .map {
-                            it.toMember()
-                        }
-                        .filterNotNull()
-                )).toList()
-            )
-        }
+        override fun valueOf(
+            string: String,
+            flags: Set<Any>,
+            type: Class<*>,
+            element: AnnotatedElement,
+            vararg typeArgs: Type
+        ): Party = unsupported()
+
+        override fun toString(
+            obj: Party,
+            flags: Set<Any>,
+            type: Class<*>,
+            element: AnnotatedElement,
+            vararg typeArgs: Type
+        ): String = unsupported()
     }
 
     object Empty : Party {
-        override val leader: Member?
-            get() = null
-
         override val size: Int
             get() = 0
 
