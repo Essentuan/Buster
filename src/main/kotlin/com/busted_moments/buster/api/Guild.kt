@@ -240,13 +240,21 @@ interface Guild : GuildType, Collection<Guild.Member> {
     }
 
     companion object {
-        private var levels: DoubleArray = DoubleArray(150)
+        /**
+         * The max level of xp scaling.
+         * After this point the xp requirement is the same for every level.
+         */
+        const val MAX_LEVEL = 130
+
+        private var levels: DoubleArray = DoubleArray(MAX_LEVEL)
+
 
         fun required(level: Int): Double {
             if (level <= 0)
                 return 0.0
 
-            require(level <= 150) { "Max level is 150!" }
+            if (level > MAX_LEVEL)
+                return required(MAX_LEVEL)
 
             val xp = levels[level - 1]
             if (xp != 0.0)
