@@ -19,22 +19,6 @@ data class AttackTimer(
     val completed: Boolean
         get() = System.currentTimeMillis() > endsAt.time
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is AttackTimer) return false
-
-        if (territory != other.territory) return false
-
-        val diff = (remaining - other.remaining).abs()
-        if (diff < MARGIN_OF_ERROR)
-            return false
-
-        return true
-    }
-
-    override fun hashCode(): Int =
-        territory.hashCode()
-
     override fun toString(): String {
         return "AttackTimer(territory='$territory', endsAt=$endsAt, defense=$defense, trusted=$trusted)"
     }
