@@ -2,6 +2,7 @@ package com.busted_moments.buster.types.guilds
 
 import com.busted_moments.buster.Buster
 import com.busted_moments.buster.api.Territory
+import kotlin.math.abs
 import net.essentuan.esl.time.duration.Duration
 import net.essentuan.esl.time.extensions.timeUntil
 import java.util.Date
@@ -27,15 +28,13 @@ data class AttackTimer(
         if (other !is AttackTimer) return false
 
         if (territory != other.territory) return false
-        if (id != other.id) return false
+        if (abs(endsAt.time - other.endsAt.time) >= TEN_SECONDS) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = territory.hashCode()
-        result = 31 * result + id.hashCode()
-        return result
+        return territory.hashCode()
     }
 
     override fun toString(): String {
