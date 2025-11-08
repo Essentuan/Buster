@@ -3,7 +3,6 @@ package com.busted_moments.buster.types.guilds
 import com.busted_moments.buster.Buster
 import com.busted_moments.buster.api.Territory
 import net.essentuan.esl.time.duration.Duration
-import net.essentuan.esl.time.duration.seconds
 import net.essentuan.esl.time.extensions.timeUntil
 import java.util.Date
 
@@ -21,9 +20,5 @@ data class AttackTimer(
 
     override fun toString(): String {
         return "AttackTimer(territory='$territory', endsAt=$endsAt, defense=$defense, trusted=$trusted)"
-    }
-
-    companion object {
-        val MARGIN_OF_ERROR = 20.seconds
     }
 }
